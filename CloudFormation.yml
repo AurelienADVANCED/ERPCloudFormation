@@ -102,7 +102,7 @@ Resources:
         - Key: Name
           Value: ProjetDeFousERP-Test
 
-Outputs:
+Outputs: 
   ProjetDeFousERPInstances:
     Description: Liste des instances EC2 pour la Zone ERP
     Value: |
