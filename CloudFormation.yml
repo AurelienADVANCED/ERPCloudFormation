@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Infrastructure ERP - ProjetDeFous
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    Description: Type d'instance EC2
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: AurelienClef
+    Description: Nom de la paire de clés pour accéder à l'instance EC2
+
+Resources:
+  ### VPC et Réseau ###
+  ProjetDeFousVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: ProjetDeFousVPC
+
+  ProjetDeFousPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ProjetDeFousVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+
+  ProjetDeFousPrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ProjetDeFousVPC
+      CidrBlock: 10.0.2.0/24
+
+  ProjetDeFousInternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  ProjetDeFousAttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref ProjetDeFousVPC
+      InternetGatewayId: !Ref ProjetDeFousInternetGateway
+
+  ProjetDeFousRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref ProjetDeFousVPC
+
+  ProjetDeFousRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref ProjetDeFousRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref ProjetDeFousInternetGateway
+
+  ### Instances EC2 - Zone ERP ###
+  ProjetDeFousERPDBInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: ami-09042b2f6d07d164a
+      SubnetId: !Ref ProjetDeFousPrivateSubnet
+      Tags:
+        - Key: Name
+          Value: ProjetDeFousERP-DB
+
+  ProjetDeFousERPFrontBackInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: ami-09042b2f6d07d164a
+      SubnetId: !Ref ProjetDeFousPublicSubnet
+      Tags:
+        - Key: Name
+          Value: ProjetDeFousERP-FrontBack
+
+  ProjetDeFousERPDBTestInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: ami-09042b2f6d07d164a
+      SubnetId: !Ref ProjetDeFousPrivateSubnet
+      Tags:
+        - Key: Name
+          Value: ProjetDeFousERP-DB-Test
+
+  ProjetDeFousERPTestInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: ami-09042b2f6d07d164a
+      SubnetId: !Ref ProjetDeFousPublicSubnet
+      Tags:
+        - Key: Name
+          Value: ProjetDeFousERP-Test
+
+Outputs:
+  ProjetDeFousERPInstances:
+    Description: Liste des instances EC2 pour la Zone ERP
+    Value: |
+      ERP-DB: !Ref ProjetDeFousERPDBInstance
+      ERP-FrontBack: !Ref ProjetDeFousERPFrontBackInstance
+      ERP-DB-Test: !Ref ProjetDeFousERPDBTestInstance
+      ERP-Test: !Ref ProjetDeFousERPTestInstance
