@@ -186,5 +186,3 @@ Outputs:
       ERP-FrontBack: !Ref ProjetDeFousERPFrontBackInstance
       ERP-DB-Test: !Ref ProjetDeFousERPDBTestInstance
       ERP-Test: !Ref ProjetDeFousERPTestInstance
-
-Voici mon cloudformation pour mon EC2 cela te semble t'il correct ?
