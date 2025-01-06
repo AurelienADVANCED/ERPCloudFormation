@@ -116,16 +116,16 @@ Resources:
 
           # Création base de données, utilisateur et mot de passe
           sudo mysql -e "CREATE DATABASE myappdb;"
-          sudo mysql -e "CREATE USER 'myappuser'@'localhost' IDENTIFIED BY 'rK7r6d63Mbj7EH';"
-          sudo mysql -e "GRANT ALL PRIVILEGES ON myappdb.* TO 'myappuser'@'localhost';"
+          sudo mysql -e "CREATE USER 'ubuntu'@'localhost' IDENTIFIED BY 'rK7r6d63Mbj7EH';"
+          sudo mysql -e "GRANT ALL PRIVILEGES ON myappdb.* TO 'ubuntu'@'localhost';"
           sudo mysql -e "FLUSH PRIVILEGES;"
 
           # Installation Java 17 + Maven
           sudo apt-get install -y openjdk-17-jdk maven
 
           # Cloner le repo Spring Boot, builder et lancer l'app
-          git clone https://github.com/CLSigmaaa/AWS-ERP-FORK.git /home/ubuntu/spring-app
-          cd /home/ubuntu/spring-app
+          git clone https://github.com/AurelienADVANCED/ERPBack.git /home/ubuntu/ERPBack
+          cd /home/ubuntu/ERPBack
           mvn clean install
           java -jar target/spring-boot-app-0.0.1-SNAPSHOT.jar &
 
@@ -135,11 +135,11 @@ Resources:
           sudo npm install -g yarn pm2
 
           # Cloner un projet Next.js, builder et lancer
-          git clone https://github.com/vercel/nextjs-postgres-nextauth-tailwindcss-template.git /home/ubuntu/nextjs-app
-          cd /home/ubuntu/nextjs-app
+          git clone https://github.com/AurelienADVANCED/FrontERP.git /home/ubuntu/ERPFront
+          cd /home/ubuntu/ERPFront
           yarn install
           yarn build
-          pm2 start "yarn start" --name "nextjs-app" --watch
+          pm2 start "yarn start" --name "ERPFront" --watch
           pm2 save
 
           # Configuration UFW
