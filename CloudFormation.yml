@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Infrastructure pour la Zone ERP - ProjetDeFous0 
+Description: Infrastructure pour la Zone ERP - ProjetDeFous
 
 Parameters:
   InstanceType:
@@ -10,7 +10,15 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     Default: AurelienClef
     Description: Nom de la paire de clés pour accéder à l'instance EC2
-    
+  DomainName:
+    Type: String
+    Default: e5estiam.com
+    Description: Nom de domaine principal géré par Route 53
+  SubDomain:
+    Type: String
+    Default: prodefous-vitrine
+    Description: Sous-domaine à configurer pour le site vitrine
+
 Resources:
   ### VPC et Réseau ###
   ProjetDeFousVPC:
@@ -57,7 +65,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref ProjetDeFousInternetGateway
 
-  # Association de la table de routage au sous-réseau public
   ProjetDeFousPublicSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -65,17 +72,20 @@ Resources:
       RouteTableId: !Ref ProjetDeFousRouteTable
 
   ### Instances EC2 - Zone ERP ###
+
+  # 1) Base de données MySQL dans le sous-réseau privé
   ProjetDeFousERPDBInstance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
-      ImageId: ami-09042b2f6d07d164a 
+      ImageId: ami-09042b2f6d07d164a
       SubnetId: !Ref ProjetDeFousPrivateSubnet
       Tags:
         - Key: Name
-          Value: ProjetDeFousERP-DB
+          Value: ProjetDeFousERP-MySQL-DB
 
+  # 2) Instance Front/Back dans le sous-réseau public
   ProjetDeFousERPFrontBackInstance:
     Type: AWS::EC2::Instance
     Properties:
@@ -91,32 +101,41 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          sudo apt update -y && sudo apt upgrade -y
 
-          sudo apt install postgresql postgresql-contrib -y
-          sudo systemctl start postgresql
-          sudo systemctl enable postgresql
-          
-          sudo apt install git-all
+          # MàJ du système
+          sudo apt-get update -y
+          sudo apt-get upgrade -y
 
-          sudo -u postgres psql <<EOF
-          CREATE DATABASE myappdb;
-          CREATE USER myappuser WITH ENCRYPTED PASSWORD 'rK7r6d63Mbj7EH';
-          GRANT ALL PRIVILEGES ON DATABASE myappdb TO myappuser;
-          EOF
+          # Installation de MySQL
+          sudo apt-get install -y mysql-server
+          sudo systemctl start mysql
+          sudo systemctl enable mysql
 
-          sudo apt install openjdk-17-jdk maven -y 
+          # Création base de données, utilisateur et mot de passe
+          sudo mysql -e "CREATE DATABASE myappdb;"
+          sudo mysql -e "CREATE USER 'myappuser'@'localhost' IDENTIFIED BY 'rK7r6d63Mbj7EH';"
+          sudo mysql -e "GRANT ALL PRIVILEGES ON myappdb.* TO 'myappuser'@'localhost';"
+          sudo mysql -e "FLUSH PRIVILEGES;"
 
+          # Installation de Git
+          sudo apt-get install -y git
+
+          # Installation de Java 17 et Maven
+          sudo apt-get install -y openjdk-17-jdk maven
+
+          # Cloner et builder l'appli Spring Boot
           git clone https://github.com/CLSigmaaa/AWS-ERP-FORK.git /home/ubuntu/spring-app
           cd /home/ubuntu/spring-app
           mvn clean install
-          java -jar target/spring-boot-app-0.0.1-SNAPSHOT.jar
-          
+          # Lancement de l'appli en arrière-plan
+          java -jar target/spring-boot-app-0.0.1-SNAPSHOT.jar &
 
+          # Installation Node.js (version 18), Yarn, PM2
           curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-          sudo apt install nodejs -y
+          sudo apt-get install -y nodejs
           sudo npm install -g yarn pm2
 
+          # Cloner une app Next.js et la lancer
           git clone https://github.com/vercel/nextjs-postgres-nextauth-tailwindcss-template.git /home/ubuntu/nextjs-app
           cd /home/ubuntu/nextjs-app
           yarn install
@@ -124,12 +143,14 @@ Resources:
           pm2 start "yarn start" --name "nextjs-app" --watch
           pm2 save
 
-          sudo ufw allow 22
-          sudo ufw allow 5432
-          sudo ufw allow 8080
-          sudo ufw allow 3000
+          # Configuration pare-feu (UFW)
+          sudo ufw allow 22             # SSH
+          sudo ufw allow 3306           # MySQL
+          sudo ufw allow 8080           # Spring Boot
+          sudo ufw allow 3000           # Next.js
           sudo ufw --force enable
 
+  # Instances DB et test supplémentaires (si besoin)
   ProjetDeFousERPDBTestInstance:
     Type: AWS::EC2::Instance
     Properties:
@@ -154,7 +175,7 @@ Resources:
         - Key: Name
           Value: ProjetDeFousERP-Test
 
- ###### SecurityGroup ######
+  ###### SecurityGroup ######
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -164,25 +185,25 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0
+          CidrIp: 0.0.0.0/0   # SSH
         - IpProtocol: tcp
-          FromPort: 5432
-          ToPort: 5432
-          CidrIp: 0.0.0.0/0
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0   # MySQL
         - IpProtocol: tcp
           FromPort: 8080
           ToPort: 8080
-          CidrIp: 0.0.0.0/0
+          CidrIp: 0.0.0.0/0   # Spring Boot
         - IpProtocol: tcp
           FromPort: 3000
           ToPort: 3000
-          CidrIp: 0.0.0.0/0
+          CidrIp: 0.0.0.0/0   # Next.js
 
 Outputs:
   ProjetDeFousERPInstances:
     Description: Liste des instances EC2 pour la Zone ERP
     Value: |
-      ERP-DB: !Ref ProjetDeFousERPDBInstance
+      ERP-MySQL-DB: !Ref ProjetDeFousERPDBInstance
       ERP-FrontBack: !Ref ProjetDeFousERPFrontBackInstance
       ERP-DB-Test: !Ref ProjetDeFousERPDBTestInstance
       ERP-Test: !Ref ProjetDeFousERPTestInstance
