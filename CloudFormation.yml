@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Infrastructure pour la Zone ERP et Site Vitrine - ProjetDeFous
+Description: Infrastructure pour la Zone ERP - ProjetDeFous0 
 
 Parameters:
   InstanceType:
@@ -10,7 +10,7 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     Default: AurelienClef
     Description: Nom de la paire de clés pour accéder à l'instance EC2
-
+    
 Resources:
   ### VPC et Réseau ###
   ProjetDeFousVPC:
@@ -57,13 +57,20 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref ProjetDeFousInternetGateway
 
+  # Association de la table de routage au sous-réseau public
+  ProjetDeFousPublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref ProjetDeFousPublicSubnet
+      RouteTableId: !Ref ProjetDeFousRouteTable
+
   ### Instances EC2 - Zone ERP ###
   ProjetDeFousERPDBInstance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
-      ImageId: ami-09042b2f6d07d164a
+      ImageId: ami-09042b2f6d07d164a 
       SubnetId: !Ref ProjetDeFousPrivateSubnet
       Tags:
         - Key: Name
@@ -76,9 +83,52 @@ Resources:
       KeyName: !Ref KeyName
       ImageId: ami-09042b2f6d07d164a
       SubnetId: !Ref ProjetDeFousPublicSubnet
+      SecurityGroupIds:
+        - !Ref SecurityGroup
       Tags:
         - Key: Name
           Value: ProjetDeFousERP-FrontBack
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt update -y && sudo apt upgrade -y
+
+          sudo apt install postgresql postgresql-contrib -y
+          sudo systemctl start postgresql
+          sudo systemctl enable postgresql
+          
+          sudo apt install git-all
+
+          sudo -u postgres psql <<EOF
+          CREATE DATABASE myappdb;
+          CREATE USER myappuser WITH ENCRYPTED PASSWORD 'rK7r6d63Mbj7EH';
+          GRANT ALL PRIVILEGES ON DATABASE myappdb TO myappuser;
+          EOF
+
+          sudo apt install openjdk-17-jdk maven -y 
+
+          git clone https://github.com/CLSigmaaa/AWS-ERP-FORK.git /home/ubuntu/spring-app
+          cd /home/ubuntu/spring-app
+          mvn clean install
+          java -jar target/spring-boot-app-0.0.1-SNAPSHOT.jar
+          
+
+          curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+          sudo apt install nodejs -y
+          sudo npm install -g yarn pm2
+
+          git clone https://github.com/vercel/nextjs-postgres-nextauth-tailwindcss-template.git /home/ubuntu/nextjs-app
+          cd /home/ubuntu/nextjs-app
+          yarn install
+          yarn build
+          pm2 start "yarn start" --name "nextjs-app" --watch
+          pm2 save
+
+          sudo ufw allow 22
+          sudo ufw allow 5432
+          sudo ufw allow 8080
+          sudo ufw allow 3000
+          sudo ufw --force enable
 
   ProjetDeFousERPDBTestInstance:
     Type: AWS::EC2::Instance
@@ -98,9 +148,35 @@ Resources:
       KeyName: !Ref KeyName
       ImageId: ami-09042b2f6d07d164a
       SubnetId: !Ref ProjetDeFousPublicSubnet
+      SecurityGroupIds:
+        - !Ref SecurityGroup
       Tags:
         - Key: Name
           Value: ProjetDeFousERP-Test
+
+ ###### SecurityGroup ######
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Security group for ERP front/back SSH access"
+      VpcId: !Ref ProjetDeFousVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
 
 Outputs:
   ProjetDeFousERPInstances:
@@ -110,3 +186,5 @@ Outputs:
       ERP-FrontBack: !Ref ProjetDeFousERPFrontBackInstance
       ERP-DB-Test: !Ref ProjetDeFousERPDBTestInstance
       ERP-Test: !Ref ProjetDeFousERPTestInstance
+
+Voici mon cloudformation pour mon EC2 cela te semble t'il correct ?
