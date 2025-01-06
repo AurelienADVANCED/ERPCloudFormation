@@ -94,7 +94,7 @@ Resources:
     Properties:
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
-      ImageId: 	ami-037852bba16907d50
+      ImageId: ami-037852bba16907d50
       SubnetId: !Ref ProjetDeFousPublicSubnet
       SecurityGroupIds:
         - !Ref SecurityGroup
