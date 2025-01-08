@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Infrastructure pour la Zone ERP - ProjetDeFous 1
+Description: Infrastructure pour la Zone ERP - ProjetDeFous
 
 Parameters:
   InstanceType:
@@ -10,12 +10,12 @@ Parameters:
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Default: AurelienClef
-    Description: Nom de la paire de clés pour accéder à l'instance EC2
+    Description: Nom de la paire de cl?s pour acc?der ? l'instance EC2
 
   DBHost:
     Type: String
     Default: "localhost"
-    Description: Hôte de la base de données MySQL (ici on reste sur localhost)
+    Description: H?te de la base de donn?es MySQL (ici on reste sur localhost)
 
   DBUser:
     Type: String
@@ -30,7 +30,7 @@ Parameters:
 
     
 Resources:
-  ### VPC et Réseau ###
+  ### VPC et R?seau ###
   ProjetDeFousVPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -75,7 +75,7 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref ProjetDeFousInternetGateway
 
-  # Association de la table de routage au sous-réseau public
+  # Association de la table de routage au sous-r?seau public
   ProjetDeFousPublicSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -122,58 +122,54 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          # sudo apt update -y && sudo apt upgrade -y
+          sudo apt update -y && sudo apt upgrade -y
 
           # Installation de MySQL
-          # sudo apt-get install -y mysql-server
-          # sudo systemctl start mysql
-          # sudo systemctl enable mysql
+          sudo apt-get install -y mysql-server
+          sudo systemctl start mysql
+          sudo systemctl enable mysql
           
           # Installation de Git
           sudo apt-get install -y git-all
 
-          # Création base de données, utilisateur et mot de passe
-          # sudo mysql -u root -e "CREATE DATABASE IF NOT EXISTS erpdb;"
-          # sudo mysql -u root -e "CREATE USER IF NOT EXISTS '${DBUser}'@'localhost' IDENTIFIED BY '${DBPassword}';"
-          # sudo mysql -u root -e "GRANT ALL PRIVILEGES ON erpdb.* TO '${DBUser}'@'localhost'; FLUSH PRIVILEGES;"
+          # Cr?ation base de donn?es, utilisateur et mot de passe
+          sudo mysql -u root -e "CREATE DATABASE IF NOT EXISTS erpdb;"
+          sudo mysql -u root -e "CREATE USER IF NOT EXISTS '${DBUser}'@'localhost' IDENTIFIED BY '${DBPassword}';"
+          sudo mysql -u root -e "GRANT ALL PRIVILEGES ON erpdb.* TO '${DBUser}'@'localhost'; FLUSH PRIVILEGES;"
 
           # Installation Java 17 + Maven
           sudo apt-get install -y openjdk-17-jdk maven
 
           # Export des variables d'environnement pour que Spring Boot les lise
-          # export DB_HOST=${DBHost}
-          # export DB_USER=${DBUser}
-          # export DB_PASSWORD=${DBPassword}
+          export DB_HOST=${DBHost}
+          export DB_USER=${DBUser}
+          export DB_PASSWORD=${DBPassword}
 
           # Cloner le repo Spring Boot, builder et lancer l'app
-          # git clone https://github.com/AurelienADVANCED/ERPBack.git /home/ubuntu/ERPBack
-          # cd /home/ubuntu/ERPBack
-          # mvn clean install
-          # java -jar target/erp-0.0.1.war &
+          git clone https://github.com/AurelienADVANCED/ERPBack.git /home/ubuntu/ERPBack
+          cd /home/ubuntu/ERPBack
+          mvn clean install
+          java -jar target/erp-0.0.1.war &
 
-          # === INSTALLATION NODE POUR LE FRONT VITE ===
+           # === INSTALLATION NODE POUR LE FRONT VITE ===
           curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
           sudo apt-get install -y nodejs
           sudo apt-get install -y npm
-          
+      
           # Cloner le projet Vite
           git clone https://github.com/AurelienADVANCED/FrontERP.git /home/ubuntu/ERPFront
           cd /home/ubuntu/ERPFront
-
-          PUBLIC_IP=$(curl -s ifconfig.me)
-          echo "VITE_API_URL=http://${PUBLIC_IP}:8080" | sudo tee /home/ubuntu/ERPFront/.env > /dev/null
-
           npm install       # ou yarn install, selon ton lockfile
           npm run build     # Compile ton front en production => dist/
-          
-          # Servir le build sur le port 3000 à l'aide de "serve" 
+      
+          # Servir le build sur le port 3000 ? l'aide de "serve" 
           sudo npm install -g serve
           serve -s dist -l 3000 > /home/ubuntu/vite.log 2>&1 &
-          
+      
           # === FIREWALL UFW (optionnel) ===
           sudo ufw allow 22       # SSH
           sudo ufw allow 3306     # MySQL
-          sudo ufw allow 8080     # Back Spring Boot (si c'est le port par défaut)
+          sudo ufw allow 8080     # Back Spring Boot (si c'est le port par d?faut)
           sudo ufw allow 3000     # Front (serve statique)
           sudo ufw --force enable
 
@@ -213,7 +209,7 @@ Resources:
   #         Value: ProjetDeFousERP-Test
 
 Outputs:
-  # On commente aussi les autres instances pour éviter les erreurs de référence.
+  # On commente aussi les autres instances pour ?viter les erreurs de r?f?rence.
   ProjetDeFousERPInstances:
     Description: Liste des instances EC2 pour la Zone ERP (uniquement FrontBack ici)
     Value: |
