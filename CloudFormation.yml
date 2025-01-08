@@ -159,6 +159,9 @@ Resources:
           # Cloner le projet Vite
           git clone https://github.com/AurelienADVANCED/FrontERP.git /home/ubuntu/ERPFront
           cd /home/ubuntu/ERPFront
+
+          sudo bash -c 'PUBLIC_IP=$(curl -s ifconfig.me); echo "VITE_API_URL=http://${PUBLIC_IP}:8080" > .env'
+          
           npm install       # ou yarn install, selon ton lockfile
           npm run build     # Compile ton front en production => dist/
       
