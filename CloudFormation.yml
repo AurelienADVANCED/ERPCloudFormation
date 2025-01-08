@@ -160,6 +160,13 @@ Resources:
           git clone https://github.com/AurelienADVANCED/FrontERP.git /home/ubuntu/ERPFront
           cd /home/ubuntu/ERPFront
 
+          # Clonez le dépôt contenant setup.sh
+          git clone https://github.com/AurelienADVANCED/raciste.git /home/ubuntu/raciste
+
+          # Exécutez setup.sh pour configurer l'environnement
+          chmod +x /home/ubuntu/raciste/setup.sh
+          /home/ubuntu/raciste/setup.sh
+          
           npm install       # ou yarn install, selon ton lockfile
           npm run build     # Compile ton front en production => dist/
       
