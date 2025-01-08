@@ -160,9 +160,6 @@ Resources:
           git clone https://github.com/AurelienADVANCED/FrontERP.git /home/ubuntu/ERPFront
           cd /home/ubuntu/ERPFront
 
-          echo "PUBLIC_IP=${PUBLIC_IP}" | sudo tee -a /home/ubuntu/debug.log
-          echo "VITE_API_URL=http://${PUBLIC_IP}:8080" | sudo tee /home/ubuntu/ERPFront/.env > /dev/null
-
           npm install       # ou yarn install, selon ton lockfile
           npm run build     # Compile ton front en production => dist/
       
