@@ -4,7 +4,7 @@ Description: Infrastructure pour la Zone ERP - ProjetDeFous0
 Parameters:
   InstanceType:
     Type: String
-    Default: t2.micro
+    Default: t2.medium
     Description: Type d'instance EC2
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
