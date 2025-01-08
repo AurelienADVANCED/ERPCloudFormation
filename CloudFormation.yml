@@ -159,6 +159,11 @@ Resources:
           # Cloner le projet Vite
           git clone https://github.com/AurelienADVANCED/FrontERP.git /home/ubuntu/ERPFront
           cd /home/ubuntu/ERPFront
+
+          # Ajouter un fichier .env avec l'IP publique de l'instance EC2
+          PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+          echo "VITE_API_URL=http://${PUBLIC_IP}:8080" > .env
+          
           npm install       # ou yarn install, selon ton lockfile
           npm run build     # Compile ton front en production => dist/
       
