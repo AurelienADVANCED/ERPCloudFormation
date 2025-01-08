@@ -161,8 +161,7 @@ Resources:
           cd /home/ubuntu/ERPFront
 
           # Ajouter un fichier .env avec l'IP publique de l'instance EC2
-          PUBLIC_IP=$(curl -s ifconfig.me)
-          echo "VITE_API_URL=http://${PUBLIC_IP}:8080" > .env
+          sudo bash -c 'PUBLIC_IP=$(curl -s ifconfig.me); echo "VITE_API_URL=http://${PUBLIC_IP}:8080" > .env'
           
           npm install       # ou yarn install, selon ton lockfile
           npm run build     # Compile ton front en production => dist/
