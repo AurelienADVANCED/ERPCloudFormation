@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Infrastructure pour la Zone ERP - ProjetDeFous
+Description: Infrastructure pour la Zone ERP - ProjetDeFous 1
 
 Parameters:
   InstanceType:
