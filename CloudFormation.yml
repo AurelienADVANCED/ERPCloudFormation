@@ -151,24 +151,26 @@ Resources:
           mvn clean install
           java -jar target/erp-0.0.1.war &
 
-          # Installer Node.js 18, Yarn, PM2
+           # === INSTALLATION NODE POUR LE FRONT VITE ===
           curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-          sudo apt install -y nodejs
-          sudo npm install -g yarn pm2
-
-          # Cloner un projet Next.js, builder et lancer
+          sudo apt-get install -y nodejs
+          sudo apt-get install -y npm
+      
+          # Cloner le projet Vite
           git clone https://github.com/AurelienADVANCED/FrontERP.git /home/ubuntu/ERPFront
           cd /home/ubuntu/ERPFront
-          yarn install
-          yarn build
-          pm2 start "yarn start" --name "ERPFront" --watch
-          pm2 save
-
-          # Configuration UFW
-          sudo ufw allow 22      # SSH
-          sudo ufw allow 3306    # MySQL
-          sudo ufw allow 8080    # Spring Boot
-          sudo ufw allow 3000    # Next.js
+          npm install       # ou yarn install, selon ton lockfile
+          npm run build     # Compile ton front en production => dist/
+      
+          # Servir le build sur le port 3000 à l'aide de "serve" 
+          sudo npm install -g serve
+          serve -s dist -l 3000 > /home/ubuntu/vite.log 2>&1 &
+      
+          # === FIREWALL UFW (optionnel) ===
+          sudo ufw allow 22       # SSH
+          sudo ufw allow 3306     # MySQL
+          sudo ufw allow 8080     # Back Spring Boot (si c'est le port par défaut)
+          sudo ufw allow 3000     # Front (serve statique)
           sudo ufw --force enable
 
   # ProjetDeFousERPDBInstance:
