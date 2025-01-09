@@ -161,11 +161,11 @@ Resources:
           cd /home/ubuntu/ERPFront
 
           # Clonez le dépôt contenant setup.sh
-          git clone https://github.com/AurelienADVANCED/raciste.git /home/ubuntu/raciste
+          git clone https://github.com/AurelienADVANCED/ERPScript.git /home/ubuntu/ERPScript
 
           # Exécutez setup.sh pour configurer l'environnement
-          chmod +x /home/ubuntu/raciste/setup.sh
-          /home/ubuntu/raciste/setup.sh
+          chmod +x /home/ubuntu/ERPScript/setup.sh
+          /home/ubuntu/ERPScript/setup.sh
           
           npm install       # ou yarn install, selon ton lockfile
           npm run build     # Compile ton front en production => dist/
